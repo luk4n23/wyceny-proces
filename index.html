@@ -18,6 +18,7 @@
   .btn-add{ background:#26303a; color:#fff; } .btn-add:hover{ background:#334150; }
   .btn-primary{ background:var(--red); color:#fff; } .btn-primary:hover{ background:#c1000f; }
   .btn-clear{ background:transparent; color:#c9d3dc; border:1px solid #3a4652; } .btn-clear:hover{ background:#26303a; color:#fff; }
+  .btn-dark{ background:#fff; color:#12161b; } .btn-dark:hover{ background:#d8dee4; }
   .hint{ max-width:1010px; margin:12px auto 0; padding:0 8px; font-size:11.5px; color:#5a6773; }
 
   .sheet{ max-width:1010px; margin:14px auto 40px; }
@@ -62,6 +63,9 @@
   .det td.c .in{ text-align:center; }
   .det td.mono .in{ font-family:Consolas,monospace; font-size:8px; color:var(--steel); }
   .det td.stg{ background:#fff6f6; } .det tr:nth-child(even) td.stg{ background:#fdeeee; }
+  .det tr.pal td.palc{ background:#2a2f35 !important; padding:0 9px; height:19px; border-color:#2a2f35; }
+  .det tr.pal td.palc .in{ color:#fff; font-weight:800; font-size:8.4px; letter-spacing:1.4px; text-transform:uppercase; height:19px; }
+  .det tr.pal td.palc .in::placeholder{ color:#8b96a0; }
   .det input[type=checkbox]{ width:14px; height:14px; accent-color:var(--red); cursor:pointer; margin:0; vertical-align:middle; }
   .rmcol{ width:26px; }
   .rm{ width:20px; height:20px; border:none; border-radius:5px; background:#f0e2e2; color:#a32d2d; font-weight:800; font-size:13px; line-height:1; cursor:pointer; }
@@ -97,10 +101,12 @@
   <div class="toolbar">
     <div class="tt"><b>■</b> ULAMEX · Karta procesu — laser</div>
     <button class="btn btn-add" onclick="addRow(); save()">+ Dodaj detal</button>
+    <button class="btn btn-add" onclick="addPallet(); save()">+ Dodaj paletę</button>
     <button class="btn btn-clear" onclick="clearAll()">Wyczyść</button>
-    <button class="btn btn-primary" onclick="window.print()">Drukuj / zapisz PDF</button>
+    <button class="btn btn-dark" onclick="window.print()">Drukuj</button>
+    <button class="btn btn-primary" onclick="savePdf()" title="W oknie druku wybierz drukarkę: Zapisz jako PDF">Zapisz PDF</button>
   </div>
-  <div class="hint">Uzupełnij pola, dodaj tyle detali ile wchodzi w skład zamówienia (przycisk „+ Dodaj detal"), a następnie „Drukuj / zapisz PDF". Kolumny R / C / P zaznacza operator po wykonaniu etapu.</div>
+  <div class="hint">Dodaj tyle detali, ile wchodzi w skład zamówienia („+ Dodaj detal"). Jeśli komplet jedzie na kilku paletach, wstaw przekładkę „+ Dodaj paletę" — detale poniżej niej należą do tej palety. Kolumny R / C / P zaznacza operator po wykonaniu etapu. <b>Zapisz PDF</b> otwiera okno druku z gotową nazwą pliku (wybierz drukarkę „Zapisz jako PDF").</div>
 
   <div class="sheet">
   <section class="page">
@@ -184,8 +190,21 @@
   var rows = document.getElementById('rows');
 
   function renum(){
-    var trs = rows.querySelectorAll('tr');
-    for(var i=0;i<trs.length;i++){ trs[i].querySelector('.lp').textContent = (i+1); }
+    var trs = rows.querySelectorAll('tr'), n = 0;
+    for(var i=0;i<trs.length;i++){
+      if(trs[i].classList.contains('pal')) continue;
+      n++; trs[i].querySelector('.lp').textContent = n;
+    }
+  }
+  function addPallet(label){
+    var tr = document.createElement('tr'); tr.className = 'pal';
+    tr.innerHTML =
+      '<td class="palc" colspan="10"><input class="in palin" placeholder="PALETA"></td>'
+      + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń przekładkę">&times;</button></td>';
+    rows.appendChild(tr);
+    tr.querySelector('.palin').value = (label !== undefined && label !== null)
+      ? label : ('PALETA ' + (rows.querySelectorAll('tr.pal').length + 1));
+    renum();
   }
   function addRow(data){
     var tr = document.createElement('tr');
@@ -211,14 +230,19 @@
     renum();
   }
   function delRow(btn){
-    if(rows.querySelectorAll('tr').length<=1) return;
-    btn.closest('tr').remove(); renum(); save();
+    var tr = btn.closest('tr');
+    if(!tr.classList.contains('pal')){
+      var det = rows.querySelectorAll('tr:not(.pal)').length;
+      if(det <= 1) return;
+    }
+    tr.remove(); renum(); save();
   }
 
   function collect(){
     return {
       meta: [].map.call(document.querySelectorAll('.meta .in'), function(e){ return e.value; }),
       rows: [].map.call(rows.querySelectorAll('tr'), function(tr){
+        if(tr.classList.contains('pal')) return { p: tr.querySelector('.palin').value };
         return {
           t: [].map.call(tr.querySelectorAll('input.in'), function(e){ return e.value; }),
           c: [].map.call(tr.querySelectorAll('input[type=checkbox]'), function(e){ return e.checked; })
@@ -238,7 +262,9 @@
     (s.meta||[]).forEach(function(v,i){ if(meta[i]) meta[i].value = v; });
     rows.innerHTML = '';
     var rr = (s.rows && s.rows.length) ? s.rows : [null,null,null,null,null,null];
-    rr.forEach(function(r){ addRow(r); });
+    rr.forEach(function(r){
+      if(r && r.p !== undefined) addPallet(r.p); else addRow(r);
+    });
     var qc = document.querySelectorAll('.qc .qgrid input');
     (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
     var qf = document.querySelectorAll('.qc .qfoot .in');
@@ -254,6 +280,15 @@
     document.querySelectorAll('.qc .qgrid input').forEach(function(c){ c.checked=false; });
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
+  }
+
+  function savePdf(){
+    var el = document.querySelector('.meta .in');
+    var nr = (el && el.value ? el.value : '').trim().replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_');
+    var old = document.title;
+    document.title = nr ? ('Karta_procesu_laser_' + nr) : 'Karta_procesu_laser';
+    window.print();
+    setTimeout(function(){ document.title = old; }, 1500);
   }
 
   if(!restore()){ for(var i=0;i<6;i++) addRow(); }
