@@ -86,16 +86,11 @@
   .qc .qgrid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px 16px; }
   .qc .qi{ display:flex; align-items:center; gap:7px; font-size:8.8px; }
   .qc .qi input[type=checkbox]{ width:12px; height:12px; accent-color:var(--red); margin:0; cursor:pointer; }
-  .qc .qfoot{ display:flex; gap:16px; margin-top:9px; padding-top:8px; border-top:1px solid var(--line); font-size:8.4px; color:var(--steel); }
-  .qc .qfoot .s{ flex:1; } .qc .qfoot .s .in{ border-bottom:1px dotted #c7ced4; height:18px; margin-top:3px; }
 
   .uwagi{ border:1.5px solid var(--line); border-radius:10px; padding:8px 11px; }
   .uwagi .l{ font-size:8px; letter-spacing:.6px; text-transform:uppercase; color:var(--steel); font-weight:800; }
   .uwagi .in{ border-bottom:1px dotted #c7ced4; height:18px; margin-top:5px; }
 
-  .foot{ display:flex; align-items:center; justify-content:space-between; margin-top:auto; padding-top:7px; border-top:2px solid var(--ink); font-size:8px; color:var(--steel); }
-  .foot .fb{ font-weight:800; color:var(--ink); } .foot .fb i{ color:var(--red); font-style:normal; }
-  .foot .dxf b{ color:var(--ink); }
 
   @media print{
     body{ background:#fff; }
@@ -104,7 +99,7 @@
     .sheet{ margin:0; max-width:none; }
     .page{ box-shadow:none; margin:0; }
     .in{ border-bottom:none !important; }
-    .fld .in, .qc .qfoot .in, .uwagi .in{ border-bottom:1px dotted #c7ced4 !important; }
+    .fld .in, .czas .in, .uwagi .in{ border-bottom:1px dotted #c7ced4 !important; }
   }
 </style>
 </head>
@@ -181,11 +176,6 @@
             <label class="qi"><input type="checkbox">Cięcie bez zadziorów i nagaru</label>
             <label class="qi"><input type="checkbox">Oznakowanie / etykieta</label>
           </div>
-          <div class="qfoot">
-            <div class="s">Kontrolę wykonał<input class="in"></div>
-            <div class="s">Data<input class="in"></div>
-            <div class="s">Podpis<input class="in"></div>
-          </div>
         </div>
       </div>
 
@@ -197,10 +187,6 @@
 
     </div>
 
-    <div class="foot">
-      <div class="fb"><i>■</i> ULAMEX · Karta procesu · laser · zbiorcza</div>
-      <div class="dxf"><b>STANDARD DXF:</b> mm · skala 1:1 · kontur zamknięty · tekst na krzywe</div>
-    </div>
   </section>
   </div>
 
@@ -266,7 +252,6 @@
       }),
       czas: [].map.call(document.querySelectorAll('.czas .in'), function(e){ return e.value; }),
       qc: [].map.call(document.querySelectorAll('.qc .qgrid input'), function(e){ return e.checked; }),
-      qfoot: [].map.call(document.querySelectorAll('.qc .qfoot .in'), function(e){ return e.value; }),
       uwagi: [].map.call(document.querySelectorAll('.uwagi .in'), function(e){ return e.value; })
     };
   }
@@ -286,8 +271,6 @@
     (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     var qc = document.querySelectorAll('.qc .qgrid input');
     (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
-    var qf = document.querySelectorAll('.qc .qfoot .in');
-    (s.qfoot||[]).forEach(function(v,i){ if(qf[i]) qf[i].value = v; });
     var uw = document.querySelectorAll('.uwagi .in');
     (s.uwagi||[]).forEach(function(v,i){ if(uw[i]) uw[i].value = v; });
     return true;
@@ -295,7 +278,7 @@
   function clearAll(){
     if(!confirm('Wyczyścić całą kartę? Tej operacji nie można cofnąć.')) return;
     try{ localStorage.removeItem(KEY); }catch(e){}
-    document.querySelectorAll('.meta .in, .czas .in, .qc .qfoot .in, .uwagi .in').forEach(function(e){ e.value=''; });
+    document.querySelectorAll('.meta .in, .czas .in, .uwagi .in').forEach(function(e){ e.value=''; });
     document.querySelectorAll('.qc .qgrid input').forEach(function(c){ c.checked=false; });
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
