@@ -70,6 +70,12 @@
   .det td.c .in{ text-align:center; }
   .det td.mono .in{ font-family:Consolas,monospace; font-size:7.4px; color:var(--steel); }
   .det td.mono .in.tiny{ font-size:6.4px; letter-spacing:-.1px; }
+  .prgwrap{ margin-top:9px; }
+  .prgh{ font-size:8.4px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--ink); margin-bottom:4px; }
+  .prgh .lg{ font-size:7.8px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--steel-l); margin-left:8px; }
+  .det.prg td{ height:22px; }
+  .det.prg td.pn .in{ font-family:Consolas,monospace; font-size:8.4px; font-weight:700; color:var(--ink); }
+
   .czas{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:9px; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; }
   .czas .l{ font-size:7.6px; letter-spacing:.6px; text-transform:uppercase; color:var(--steel-l); font-weight:800; }
   .czas .in{ border-bottom:1px dotted #c7ced4; height:20px; margin-top:3px; }
@@ -112,6 +118,7 @@
     <div class="tt"><b>■</b> ULAMEX · Karta procesu — laser</div>
     <button class="btn btn-load" onclick="document.getElementById('dxfpick').click()">Wczytaj pliki DXF</button>
     <input type="file" id="dxfpick" multiple accept=".dxf,.DXF" style="display:none" onchange="handleFiles(this.files); this.value=''">
+    <button class="btn btn-add" onclick="addProg(); save()">+ Dodaj program</button>
     <button class="btn btn-add" onclick="addRow(); save()">+ Dodaj detal</button>
     <button class="btn btn-add" onclick="addPallet(); save()">+ Dodaj paletę</button>
     <button class="btn btn-clear" onclick="clearAll()">Wyczyść</button>
@@ -146,6 +153,19 @@
           <div class="fld"><div class="l">Klient</div><input class="in"></div>
           <div class="fld"><div class="l">Data przyjęcia</div><input class="in"></div>
           <div class="fld"><div class="l">Termin</div><input class="in"></div>
+        </div>
+
+        <div class="prgwrap">
+          <div class="prgh">Programy na maszynę<span class="lg">otwórz na sterowniku po kolei i odhacz wykonane</span></div>
+          <table class="det prg">
+            <colgroup>
+              <col style="width:53%"><col style="width:27%"><col style="width:8%"><col style="width:8.5%"><col style="width:3.5%">
+            </colgroup>
+            <thead><tr>
+              <th>Nazwa programu na sterowniku</th><th>Materiał / grubość</th><th class="c">Ark.</th><th class="c">Wykonano</th><th class="rmcol"></th>
+            </tr></thead>
+            <tbody id="progs"></tbody>
+          </table>
         </div>
       </div>
 
@@ -201,6 +221,28 @@
 <script>
   var KEY = 'mks_karta_laser';
   var rows = document.getElementById('rows');
+  var progs = document.getElementById('progs');
+
+  function addProg(data){
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="pn"><input class="in"></td>'
+      + '<td><input class="in"></td>'
+      + '<td class="c"><input class="in"></td>'
+      + '<td class="c"><input type="checkbox"></td>'
+      + '<td class="rmcol"><button class="rm" onclick="delProg(this)" title="Usuń program">&times;</button></td>';
+    progs.appendChild(tr);
+    if(data){
+      var ins = tr.querySelectorAll('input.in');
+      (data.t||[]).forEach(function(v,i){ if(ins[i]) ins[i].value = v; });
+      var cb = tr.querySelector('input[type=checkbox]');
+      if(cb) cb.checked = !!data.done;
+    }
+  }
+  function delProg(btn){
+    if(progs.querySelectorAll('tr').length <= 1) return;
+    btn.closest('tr').remove(); save();
+  }
 
   function renum(){
     var trs = rows.querySelectorAll('tr'), n = 0;
@@ -251,6 +293,13 @@
   function collect(){
     return {
       meta: [].map.call(document.querySelectorAll('.meta .in'), function(e){ return e.value; }),
+      progs: [].map.call(progs.querySelectorAll('tr'), function(tr){
+        var cb = tr.querySelector('input[type=checkbox]');
+        return {
+          t: [].map.call(tr.querySelectorAll('input.in'), function(e){ return e.value; }),
+          done: cb ? cb.checked : false
+        };
+      }),
       rows: [].map.call(rows.querySelectorAll('tr'), function(tr){
         if(tr.classList.contains('pal')) return { p: tr.querySelector('.palin').value };
         return {
@@ -271,6 +320,9 @@
     var s; try{ s = JSON.parse(raw); }catch(e){ return false; }
     var meta = document.querySelectorAll('.meta .in');
     (s.meta||[]).forEach(function(v,i){ if(meta[i]) meta[i].value = v; });
+    progs.innerHTML = '';
+    var pp = (s.progs && s.progs.length) ? s.progs : [null,null];
+    pp.forEach(function(p){ addProg(p); });
     rows.innerHTML = '';
     var rr = (s.rows && s.rows.length) ? s.rows : [null,null,null,null,null,null];
     rr.forEach(function(r){
@@ -291,6 +343,7 @@
     try{ localStorage.removeItem(KEY); }catch(e){}
     document.querySelectorAll('.meta .in, .czas .in, .qcsig .in, .uwagi .in').forEach(function(e){ e.value=''; });
     document.querySelectorAll('.qc .qgrid input').forEach(function(c){ c.checked=false; });
+    progs.innerHTML=''; for(var p=0;p<2;p++) addProg();
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
   }
@@ -370,7 +423,7 @@
     setTimeout(function(){ document.title = old; }, 1500);
   }
 
-  if(!restore()){ for(var i=0;i<6;i++) addRow(); }
+  if(!restore()){ for(var p=0;p<2;p++) addProg(); for(var i=0;i<6;i++) addRow(); }
   document.addEventListener('input', save);
   document.addEventListener('change', save);
 </script>
