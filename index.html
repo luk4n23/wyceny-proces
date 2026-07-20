@@ -68,8 +68,12 @@
   .det tr:nth-child(even) td{ background:#fafbfc; }
   .det td .in{ height:22px; padding:0 2px; }
   .det td.c .in{ text-align:center; }
-  .det td.mono .in{ font-family:Consolas,monospace; font-size:8px; color:var(--steel); }
-  .det td.stg{ background:#fff6f6; } .det tr:nth-child(even) td.stg{ background:#fdeeee; }
+  .det td.mono .in{ font-family:Consolas,monospace; font-size:7.4px; color:var(--steel); }
+  .det td.mono .in.tiny{ font-size:6.4px; letter-spacing:-.1px; }
+  .czas{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-top:9px; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; }
+  .czas .l{ font-size:7.6px; letter-spacing:.6px; text-transform:uppercase; color:var(--steel-l); font-weight:800; }
+  .czas .in{ border-bottom:1px dotted #c7ced4; height:20px; margin-top:3px; }
+  .czas .in:focus{ border-bottom-color:var(--red); }
   .det tr.pal td.palc{ background:#2a2f35 !important; padding:0 9px; height:19px; border-color:#2a2f35; }
   .det tr.pal td.palc .in{ color:#fff; font-weight:800; font-size:8.4px; letter-spacing:1.4px; text-transform:uppercase; height:19px; }
   .det tr.pal td.palc .in::placeholder{ color:#8b96a0; }
@@ -147,18 +151,23 @@
       </div>
 
       <div>
-        <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Detale i przebieg<span class="lg">etapy: R = rozkrój · C = cięcie · P = pakowanie (zaznacz po wykonaniu)</span></div></div>
+        <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Detale<span class="lg">wszystkie detale wchodzące w skład zamówienia</span></div></div>
         <table class="det">
           <colgroup>
-            <col style="width:5%"><col style="width:30%"><col style="width:11%"><col style="width:6.5%"><col style="width:6.5%">
-            <col style="width:24%"><col style="width:4.7%"><col style="width:4.7%"><col style="width:4.7%"><col style="width:2.9%">
+            <col style="width:4.5%"><col style="width:25%"><col style="width:11%"><col style="width:6.5%"><col style="width:6.5%">
+            <col style="width:43%"><col style="width:3.5%">
           </colgroup>
           <thead><tr>
             <th class="c">Lp</th><th>Nazwa detalu</th><th>Materiał</th><th class="c">Gr [mm]</th><th class="c">Szt.</th>
-            <th>Plik DXF</th><th class="c">R</th><th class="c">C</th><th class="c">P</th><th class="rmcol"></th>
+            <th>Plik DXF</th><th class="rmcol"></th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
+        <div class="czas">
+          <div class="f"><div class="l">Czas na przygotowanie</div><input class="in"></div>
+          <div class="f"><div class="l">Czas na cięcie</div><input class="in"></div>
+          <div class="f"><div class="l">Podpis operatora</div><input class="in"></div>
+        </div>
       </div>
 
       <div>
@@ -209,7 +218,7 @@
   function addPallet(label){
     var tr = document.createElement('tr'); tr.className = 'pal';
     tr.innerHTML =
-      '<td class="palc" colspan="9"><input class="in palin" placeholder="PALETA"></td>'
+      '<td class="palc" colspan="6"><input class="in palin" placeholder="PALETA"></td>'
       + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń przekładkę">&times;</button></td>';
     rows.appendChild(tr);
     tr.querySelector('.palin').value = (label !== undefined && label !== null)
@@ -225,14 +234,12 @@
       + '<td class="c"><input class="in"></td>'
       + '<td class="c"><input class="in"></td>'
       + '<td class="mono"><input class="in"></td>'
-      + '<td class="c stg"><input type="checkbox"></td>'
-      + '<td class="c stg"><input type="checkbox"></td>'
-      + '<td class="c stg"><input type="checkbox"></td>'
       + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń wiersz">&times;</button></td>';
     rows.appendChild(tr);
     if(data){
       var ins = tr.querySelectorAll('input.in');
       (data.t||[]).forEach(function(v,i){ if(ins[i]) ins[i].value = v; });
+      if(typeof fitPlik === 'function') fitPlik(ins[4]);
       var cbs = tr.querySelectorAll('input[type=checkbox]');
       (data.c||[]).forEach(function(v,i){ if(cbs[i]) cbs[i].checked = !!v; });
     }
@@ -257,6 +264,7 @@
           c: [].map.call(tr.querySelectorAll('input[type=checkbox]'), function(e){ return e.checked; })
         };
       }),
+      czas: [].map.call(document.querySelectorAll('.czas .in'), function(e){ return e.value; }),
       qc: [].map.call(document.querySelectorAll('.qc .qgrid input'), function(e){ return e.checked; }),
       qfoot: [].map.call(document.querySelectorAll('.qc .qfoot .in'), function(e){ return e.value; }),
       uwagi: [].map.call(document.querySelectorAll('.uwagi .in'), function(e){ return e.value; })
@@ -274,6 +282,8 @@
     rr.forEach(function(r){
       if(r && r.p !== undefined) addPallet(r.p); else addRow(r);
     });
+    var cz = document.querySelectorAll('.czas .in');
+    (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     var qc = document.querySelectorAll('.qc .qgrid input');
     (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
     var qf = document.querySelectorAll('.qc .qfoot .in');
@@ -285,13 +295,20 @@
   function clearAll(){
     if(!confirm('Wyczyścić całą kartę? Tej operacji nie można cofnąć.')) return;
     try{ localStorage.removeItem(KEY); }catch(e){}
-    document.querySelectorAll('.meta .in, .qc .qfoot .in, .uwagi .in').forEach(function(e){ e.value=''; });
+    document.querySelectorAll('.meta .in, .czas .in, .qc .qfoot .in, .uwagi .in').forEach(function(e){ e.value=''; });
     document.querySelectorAll('.qc .qgrid input').forEach(function(c){ c.checked=false; });
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
   }
 
   /* --- wczytywanie plikow DXF --- */
+  function fitPlik(el){
+    if(!el) return;
+    el.classList.toggle('tiny', (el.value || '').length > 56);
+  }
+  document.addEventListener('input', function(e){
+    if(e.target && e.target.closest && e.target.closest('.det td.mono')) fitPlik(e.target);
+  });
   function parseDxf(filename){
     var base = filename.replace(/\.[^.]+$/, '');
     var out = { nazwa:'', mat:'', gr:'', szt:'', plik: filename };
@@ -316,6 +333,7 @@
   function fillRow(tr, d){
     var ins = tr.querySelectorAll('input.in');
     ins[0].value = d.nazwa; ins[1].value = d.mat; ins[2].value = d.gr; ins[3].value = d.szt; ins[4].value = d.plik;
+    fitPlik(ins[4]);
   }
   function handleFiles(files){
     var list = [].slice.call(files).filter(function(f){ return /\.dxf$/i.test(f.name); });
