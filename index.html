@@ -86,6 +86,10 @@
   .qc .qgrid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px 16px; }
   .qc .qi{ display:flex; align-items:center; gap:7px; font-size:8.8px; }
   .qc .qi input[type=checkbox]{ width:12px; height:12px; accent-color:var(--red); margin:0; cursor:pointer; }
+  .qcsig{ display:grid; grid-template-columns:1fr 2fr; gap:16px; margin-top:10px; padding-top:9px; border-top:1px solid var(--line); }
+  .qcsig .l{ font-size:7.6px; letter-spacing:.6px; text-transform:uppercase; color:var(--steel-l); font-weight:800; }
+  .qcsig .in{ border-bottom:1px dotted #c7ced4; height:20px; margin-top:3px; }
+  .qcsig .in:focus{ border-bottom-color:var(--red); }
 
   .uwagi{ border:1.5px solid var(--line); border-radius:10px; padding:8px 11px; }
   .uwagi .l{ font-size:8px; letter-spacing:.6px; text-transform:uppercase; color:var(--steel); font-weight:800; }
@@ -99,7 +103,7 @@
     .sheet{ margin:0; max-width:none; }
     .page{ box-shadow:none; margin:0; }
     .in{ border-bottom:none !important; }
-    .fld .in, .czas .in, .uwagi .in{ border-bottom:1px dotted #c7ced4 !important; }
+    .fld .in, .czas .in, .qcsig .in, .uwagi .in{ border-bottom:1px dotted #c7ced4 !important; }
   }
 </style>
 </head>
@@ -166,7 +170,7 @@
       </div>
 
       <div>
-        <div class="sec-h"><div class="sec-n">3</div><div class="sec-t">Kontrola jakości · laser</div></div>
+        <div class="sec-h"><div class="sec-n">3</div><div class="sec-t">Kontrola jakości · laser<span class="lg">uzupełnia kontroler jakości</span></div></div>
         <div class="qc">
           <div class="qgrid">
             <label class="qi"><input type="checkbox">Zgodność z plikiem</label>
@@ -175,6 +179,10 @@
             <label class="qi"><input type="checkbox">Materiał i grubość zgodne</label>
             <label class="qi"><input type="checkbox">Cięcie bez zadziorów i nagaru</label>
             <label class="qi"><input type="checkbox">Oznakowanie / etykieta</label>
+          </div>
+          <div class="qcsig">
+            <div class="f"><div class="l">Data kontroli</div><input class="in"></div>
+            <div class="f"><div class="l">Podpis kontrolera jakości</div><input class="in"></div>
           </div>
         </div>
       </div>
@@ -252,6 +260,7 @@
       }),
       czas: [].map.call(document.querySelectorAll('.czas .in'), function(e){ return e.value; }),
       qc: [].map.call(document.querySelectorAll('.qc .qgrid input'), function(e){ return e.checked; }),
+      qcsig: [].map.call(document.querySelectorAll('.qcsig .in'), function(e){ return e.value; }),
       uwagi: [].map.call(document.querySelectorAll('.uwagi .in'), function(e){ return e.value; })
     };
   }
@@ -271,6 +280,8 @@
     (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     var qc = document.querySelectorAll('.qc .qgrid input');
     (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
+    var qs = document.querySelectorAll('.qcsig .in');
+    (s.qcsig||[]).forEach(function(v,i){ if(qs[i]) qs[i].value = v; });
     var uw = document.querySelectorAll('.uwagi .in');
     (s.uwagi||[]).forEach(function(v,i){ if(uw[i]) uw[i].value = v; });
     return true;
@@ -278,7 +289,7 @@
   function clearAll(){
     if(!confirm('Wyczyścić całą kartę? Tej operacji nie można cofnąć.')) return;
     try{ localStorage.removeItem(KEY); }catch(e){}
-    document.querySelectorAll('.meta .in, .czas .in, .uwagi .in').forEach(function(e){ e.value=''; });
+    document.querySelectorAll('.meta .in, .czas .in, .qcsig .in, .uwagi .in').forEach(function(e){ e.value=''; });
     document.querySelectorAll('.qc .qgrid input').forEach(function(c){ c.checked=false; });
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
