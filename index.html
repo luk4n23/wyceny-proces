@@ -19,6 +19,13 @@
   .btn-primary{ background:var(--red); color:#fff; } .btn-primary:hover{ background:#c1000f; }
   .btn-clear{ background:transparent; color:#c9d3dc; border:1px solid #3a4652; } .btn-clear:hover{ background:#26303a; color:#fff; }
   .btn-dark{ background:#fff; color:#12161b; } .btn-dark:hover{ background:#d8dee4; }
+  .btn-load{ background:#0f7b52; color:#fff; } .btn-load:hover{ background:#0c6543; }
+  .hint .mono{ font-family:Consolas,monospace; background:#dfe5ea; border-radius:4px; padding:1px 5px; }
+
+  .dropveil{ display:none; position:fixed; inset:0; z-index:60; background:rgba(18,22,27,.72); align-items:center; justify-content:center; }
+  .dropveil.on{ display:flex; }
+  .dropmsg{ border:3px dashed #fff; border-radius:16px; padding:34px 54px; text-align:center; color:#fff; font-size:20px; font-weight:800; letter-spacing:.3px; }
+  .dropmsg small{ display:block; font-size:12px; font-weight:600; opacity:.8; margin-top:7px; letter-spacing:0; }
   .hint{ max-width:1010px; margin:12px auto 0; padding:0 8px; font-size:11.5px; color:#5a6773; }
 
   .sheet{ max-width:1010px; margin:14px auto 40px; }
@@ -88,7 +95,7 @@
 
   @media print{
     body{ background:#fff; }
-    .toolbar, .hint, .rmcol, .rm{ display:none !important; }
+    .toolbar, .hint, .rmcol, .rm, .dropveil{ display:none !important; }
     .det th:last-child, .det td.rmcol{ display:none; }
     .sheet{ margin:0; max-width:none; }
     .page{ box-shadow:none; margin:0; }
@@ -100,13 +107,16 @@
 <body>
   <div class="toolbar">
     <div class="tt"><b>■</b> ULAMEX · Karta procesu — laser</div>
+    <button class="btn btn-load" onclick="document.getElementById('dxfpick').click()">Wczytaj pliki DXF</button>
+    <input type="file" id="dxfpick" multiple accept=".dxf,.DXF" style="display:none" onchange="handleFiles(this.files); this.value=''">
     <button class="btn btn-add" onclick="addRow(); save()">+ Dodaj detal</button>
     <button class="btn btn-add" onclick="addPallet(); save()">+ Dodaj paletę</button>
     <button class="btn btn-clear" onclick="clearAll()">Wyczyść</button>
     <button class="btn btn-dark" onclick="window.print()">Drukuj</button>
     <button class="btn btn-primary" onclick="savePdf()" title="W oknie druku wybierz drukarkę: Zapisz jako PDF">Zapisz PDF</button>
   </div>
-  <div class="hint">Dodaj tyle detali, ile wchodzi w skład zamówienia („+ Dodaj detal"). Jeśli komplet jedzie na kilku paletach, wstaw przekładkę „+ Dodaj paletę" — detale poniżej niej należą do tej palety. Kolumny R / C / P zaznacza operator po wykonaniu etapu. <b>Zapisz PDF</b> otwiera okno druku z gotową nazwą pliku (wybierz drukarkę „Zapisz jako PDF").</div>
+  <div class="hint"><b>Przeciągnij pliki DXF w dowolne miejsce tej strony</b> — nazwa, materiał, grubość i ilość uzupełnią się same wg standardu <span class="mono">nazwa_grubosc_ilosc_material</span>. Możesz też kliknąć „Wczytaj pliki DXF". Kolumny R / C / P zaznacza operator po wykonaniu etapu. <b>Zapisz PDF</b> otwiera okno druku z gotową nazwą pliku (wybierz drukarkę „Zapisz jako PDF").</div>
+  <div class="dropveil" id="veil"><div class="dropmsg">Upuść pliki DXF<small>nazwa, materiał, grubość i ilość uzupełnią się same</small></div></div>
 
   <div class="sheet">
   <section class="page">
@@ -140,12 +150,12 @@
         <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Detale i przebieg<span class="lg">etapy: R = rozkrój · C = cięcie · P = pakowanie (zaznacz po wykonaniu)</span></div></div>
         <table class="det">
           <colgroup>
-            <col style="width:5%"><col style="width:24%"><col style="width:10%"><col style="width:6%"><col style="width:6%">
-            <col style="width:19%"><col style="width:4.6%"><col style="width:4.6%"><col style="width:4.6%"><col style="width:7.2%"><col style="width:3.4%">
+            <col style="width:5%"><col style="width:30%"><col style="width:11%"><col style="width:6.5%"><col style="width:6.5%">
+            <col style="width:24%"><col style="width:4.7%"><col style="width:4.7%"><col style="width:4.7%"><col style="width:2.9%">
           </colgroup>
           <thead><tr>
             <th class="c">Lp</th><th>Nazwa detalu</th><th>Materiał</th><th class="c">Gr [mm]</th><th class="c">Szt.</th>
-            <th>Plik DXF</th><th class="c">R</th><th class="c">C</th><th class="c">P</th><th class="c">Podpis</th><th class="rmcol"></th>
+            <th>Plik DXF</th><th class="c">R</th><th class="c">C</th><th class="c">P</th><th class="rmcol"></th>
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
@@ -199,7 +209,7 @@
   function addPallet(label){
     var tr = document.createElement('tr'); tr.className = 'pal';
     tr.innerHTML =
-      '<td class="palc" colspan="10"><input class="in palin" placeholder="PALETA"></td>'
+      '<td class="palc" colspan="9"><input class="in palin" placeholder="PALETA"></td>'
       + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń przekładkę">&times;</button></td>';
     rows.appendChild(tr);
     tr.querySelector('.palin').value = (label !== undefined && label !== null)
@@ -218,7 +228,6 @@
       + '<td class="c stg"><input type="checkbox"></td>'
       + '<td class="c stg"><input type="checkbox"></td>'
       + '<td class="c stg"><input type="checkbox"></td>'
-      + '<td><input class="in"></td>'
       + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń wiersz">&times;</button></td>';
     rows.appendChild(tr);
     if(data){
@@ -281,6 +290,64 @@
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
   }
+
+  /* --- wczytywanie plikow DXF --- */
+  function parseDxf(filename){
+    var base = filename.replace(/\.[^.]+$/, '');
+    var out = { nazwa:'', mat:'', gr:'', szt:'', plik: filename };
+    var rest = [];
+    base.split('_').forEach(function(p){
+      var m;
+      if(!out.gr && (m = p.match(/^(\d+(?:[.,]\d+)?)\s*mm$/i))){ out.gr = m[1].replace('.', ','); return; }
+      if(!out.szt && (m = p.match(/^x\s*(\d+)$/i))){ out.szt = m[1]; return; }
+      if(!out.szt && (m = p.match(/^(\d+)\s*(?:szt|x)$/i))){ out.szt = m[1]; return; }
+      rest.push(p);
+    });
+    if(rest.length > 1){ out.mat = rest.pop(); }
+    out.nazwa = rest.join('_');
+    return out;
+  }
+  function isRowEmpty(tr){
+    if(tr.classList.contains('pal')) return false;
+    var ins = tr.querySelectorAll('input.in');
+    for(var i=0;i<ins.length;i++){ if(ins[i].value.trim()) return false; }
+    return true;
+  }
+  function fillRow(tr, d){
+    var ins = tr.querySelectorAll('input.in');
+    ins[0].value = d.nazwa; ins[1].value = d.mat; ins[2].value = d.gr; ins[3].value = d.szt; ins[4].value = d.plik;
+  }
+  function handleFiles(files){
+    var list = [].slice.call(files).filter(function(f){ return /\.dxf$/i.test(f.name); });
+    if(!list.length){ alert('Nie znaleziono plików DXF. Przeciągnij pliki z rozszerzeniem .dxf'); return; }
+    list.sort(function(a,b){ return a.name.localeCompare(b.name, 'pl'); });
+    list.forEach(function(f){
+      var d = parseDxf(f.name);
+      var trs = rows.querySelectorAll('tr'), target = null;
+      for(var i=0;i<trs.length;i++){ if(isRowEmpty(trs[i])){ target = trs[i]; break; } }
+      if(!target){ addRow(); target = rows.lastElementChild; }
+      fillRow(target, d);
+    });
+    renum(); save();
+  }
+
+  /* --- drag and drop na calej stronie --- */
+  (function(){
+    var veil = document.getElementById('veil'), depth = 0;
+    function hasFiles(e){ return e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], 'Files') !== -1; }
+    document.addEventListener('dragenter', function(e){
+      if(!hasFiles(e)) return; e.preventDefault(); depth++; veil.classList.add('on');
+    });
+    document.addEventListener('dragover', function(e){ if(hasFiles(e)){ e.preventDefault(); } });
+    document.addEventListener('dragleave', function(e){
+      if(!hasFiles(e)) return; depth--; if(depth<=0){ depth=0; veil.classList.remove('on'); }
+    });
+    document.addEventListener('drop', function(e){
+      if(!hasFiles(e)) return;
+      e.preventDefault(); depth=0; veil.classList.remove('on');
+      handleFiles(e.dataTransfer.files);
+    });
+  })();
 
   function savePdf(){
     var el = document.querySelector('.meta .in');
