@@ -118,6 +118,9 @@
   .oft td .in{ height:22px; }
   .oft td.r .in{ text-align:right; } .oft td.c .in{ text-align:center; }
   .oft .wn{ font-weight:700; white-space:nowrap; }
+  .fld .hf{ width:100%; border:none; background:transparent; font:inherit; color:var(--ink); padding:2px 0; outline:none; border-bottom:1px dotted #c7ced4; height:20px; margin-top:2px; }
+  .fld select.hf{ cursor:pointer; }
+  .fld .hf:focus{ border-bottom-color:var(--red); }
   .sum{ margin:11px 0 0 auto; width:290px; }
   .sum .row{ display:flex; justify-content:space-between; align-items:center; padding:6px 11px; font-size:10.5px; border:1px solid var(--line); border-bottom:none; }
   .sum .row:first-child{ border-radius:9px 9px 0 0; }
@@ -139,7 +142,7 @@
     .sheet{ margin:0; max-width:none; }
     .page{ box-shadow:none; margin:0; }
     .in{ border-bottom:none !important; }
-    .fld .in, .czas .in, .qcsig .in, .uwagi .in, .wbox .in{ border-bottom:1px dotted #c7ced4 !important; }
+    .fld .in, .fld .hf, .czas .in, .qcsig .in, .uwagi .in, .wbox .in{ border-bottom:1px dotted #c7ced4 !important; }
   }
 </style>
 </head>
@@ -262,7 +265,7 @@
   </div><!-- /view-karta -->
 
   <div class="view" id="view-oferta" style="display:none">
-  <div class="hint">Uzupełnij pozycje oferty · <b>Wartość netto liczy się sama</b> (ilość × cena), a pod tabelą suma netto, VAT i brutto. „Zapisz PDF" nazywa plik od numeru oferty.</div>
+  <div class="hint">Datę wybierasz z kalendarza, formę płatności i ważność z listy. <b>Wartość netto liczy się sama</b> (cena × ilość), a pod tabelą suma netto, VAT i brutto. „Zapisz PDF" nazywa plik od nr zlecenia klienta.</div>
   <div class="sheet">
   <section class="page">
     <div class="top-accent"></div>
@@ -281,25 +284,31 @@
 
     <div class="body">
 
-      <div class="meta">
-        <div class="fld"><div class="l">Nr oferty</div><input class="in"></div>
-        <div class="fld"><div class="l">Data wystawienia</div><input class="in"></div>
-        <div class="fld"><div class="l">Ważna do</div><input class="in"></div>
-        <div class="fld"><div class="l">Handlowiec</div><input class="in"></div>
+      <div class="meta" style="grid-template-columns:repeat(3,1fr);">
+        <div class="fld"><div class="l">Data wystawienia</div><input type="date" class="hf"></div>
+        <div class="fld"><div class="l">Forma płatności</div>
+          <select class="hf">
+            <option>Przelew 7 dni</option><option>Przelew 14 dni</option><option>Przelew 30 dni</option>
+            <option>Przedpłata 100%</option><option>Gotówka</option><option>Za pobraniem</option>
+          </select></div>
+        <div class="fld"><div class="l">Ofertę przygotował</div><input class="hf" list="dl-prep"></div>
+        <div class="fld"><div class="l">Oferta ważna do</div>
+          <select class="hf"><option>1 tydzień</option><option>2 tygodnie</option><option>30 dni</option><option>do odwołania</option></select></div>
+        <div class="fld"><div class="l">Termin wykonania</div><input class="hf" list="dl-term" value="do ustalenia"></div>
+        <div class="fld"><div class="l">Nr zlecenia klienta</div><input class="hf"></div>
       </div>
-      <div class="meta" style="grid-template-columns:2fr 1fr; margin-top:8px;">
-        <div class="fld"><div class="l">Klient</div><input class="in"></div>
-        <div class="fld"><div class="l">Osoba kontaktowa</div><input class="in"></div>
-      </div>
+      <datalist id="dl-prep"><option>Aleksander Wyrwicz</option></datalist>
+      <datalist id="dl-term"><option>do ustalenia</option><option>1 tydzień</option><option>2 tygodnie</option><option>3 tygodnie</option><option>4 tygodnie</option><option>wg uzgodnień</option></datalist>
+      <datalist id="dl-mat"><option>ST</option><option>OC</option><option>AL</option><option>IN</option></datalist>
 
       <div style="margin-top:13px;">
         <div class="sec-h"><div class="sec-n">1</div><div class="sec-t">Pozycje oferty</div></div>
         <table class="oft">
           <colgroup>
-            <col style="width:5%"><col style="width:46%"><col style="width:9%"><col style="width:8%"><col style="width:14.5%"><col style="width:14.5%"><col style="width:3%">
+            <col style="width:5%"><col style="width:37%"><col style="width:13%"><col style="width:15%"><col style="width:12%"><col style="width:15%"><col style="width:3%">
           </colgroup>
           <thead><tr>
-            <th class="c">Lp</th><th>Opis pozycji</th><th class="c">Ilość</th><th class="c">J.m.</th><th class="r">Cena netto</th><th class="r">Wartość netto</th><th class="rmcol"></th>
+            <th class="c">LP</th><th>Nazwa artykułu / usługi</th><th>Materiał</th><th class="r">Cena netto [PLN]</th><th class="r">Ilość [szt]</th><th class="r">Wartość netto [PLN]</th><th class="rmcol"></th>
           </tr></thead>
           <tbody id="pozy"></tbody>
         </table>
@@ -311,23 +320,10 @@
         </div>
       </div>
 
-      <div class="warunki">
-        <div class="wbox"><div class="l">Termin realizacji</div><input class="in"></div>
-        <div class="wbox"><div class="l">Warunki płatności</div><input class="in"></div>
-        <div class="wbox"><div class="l">Warunki dostawy</div><input class="in"></div>
-        <div class="wbox"><div class="l">Ważność oferty</div><input class="in"></div>
-      </div>
-
-      <div class="uwagi" style="margin-top:11px;">
-        <div class="l">Uwagi</div>
-        <input class="in">
-        <input class="in">
-      </div>
-
     </div>
 
     <div class="ofoot">
-      <b>ULAMEX</b> · Zawada 144, Tomaszów Mazowiecki · tel. +48 504 424 761 · serwis@ulamex.com.pl
+      <b>ULAMEX</b> · Zawada 144, Tomaszów Mazowiecki · serwis@ulamex.com.pl
     </div>
   </section>
   </div>
@@ -549,8 +545,8 @@
     tr.innerHTML =
       '<td class="lp"></td>'
       + '<td><input class="in"></td>'
-      + '<td class="c"><input class="in" inputmode="decimal"></td>'
-      + '<td class="c"><input class="in"></td>'
+      + '<td><input class="in" list="dl-mat"></td>'
+      + '<td class="r"><input class="in" inputmode="decimal"></td>'
       + '<td class="r"><input class="in" inputmode="decimal"></td>'
       + '<td class="r"><span class="wn">0,00 zł</span></td>'
       + '<td class="rmcol"><button class="rm" onclick="delPoz(this)" title="Usuń pozycję">&times;</button></td>';
@@ -565,9 +561,10 @@
   function recompute(){
     var net = 0;
     [].forEach.call(pozy.querySelectorAll('tr'), function(tr){
-      var ins = tr.querySelectorAll('input.in');   // 0 opis, 1 ilosc, 2 jm, 3 cena
-      var w = toNum(ins[1].value) * toNum(ins[3].value);
-      tr.querySelector('.wn').textContent = fmt(w);
+      var ins = tr.querySelectorAll('input.in');   // 0 nazwa, 1 material, 2 cena, 3 ilosc
+      var w = toNum(ins[2].value) * toNum(ins[3].value);
+      var puste = !(ins[2].value.trim() || ins[3].value.trim());
+      tr.querySelector('.wn').textContent = puste ? '' : fmt(w);
       net += w;
     });
     var vr = toNum((document.getElementById('vat')||{}).value);
@@ -578,13 +575,11 @@
   }
   function collectOf(){
     return {
-      head:    [].map.call(document.querySelectorAll('#view-oferta .fld .in'), function(e){ return e.value; }),
-      vat:     (document.getElementById('vat')||{}).value || '23',
-      poz:     [].map.call(pozy.querySelectorAll('tr'), function(tr){
-                 return { t: [].map.call(tr.querySelectorAll('input.in'), function(e){ return e.value; }) };
-               }),
-      warunki: [].map.call(document.querySelectorAll('#view-oferta .wbox .in'), function(e){ return e.value; }),
-      uwagi:   [].map.call(document.querySelectorAll('#view-oferta .uwagi .in'), function(e){ return e.value; })
+      head: [].map.call(document.querySelectorAll('#view-oferta .hf'), function(e){ return e.value; }),
+      vat:  (document.getElementById('vat')||{}).value || '23',
+      poz:  [].map.call(pozy.querySelectorAll('tr'), function(tr){
+              return { t: [].map.call(tr.querySelectorAll('input.in'), function(e){ return e.value; }) };
+            })
     };
   }
   function saveOf(){ recompute(); try{ localStorage.setItem(KEY2, JSON.stringify(collectOf())); }catch(e){} }
@@ -592,16 +587,12 @@
     var raw; try{ raw = localStorage.getItem(KEY2); }catch(e){ return false; }
     if(!raw) return false;
     var s; try{ s = JSON.parse(raw); }catch(e){ return false; }
-    var head = document.querySelectorAll('#view-oferta .fld .in');
+    var head = document.querySelectorAll('#view-oferta .hf');
     (s.head||[]).forEach(function(v,i){ if(head[i]) head[i].value = v; });
     if(document.getElementById('vat')) document.getElementById('vat').value = s.vat || '23';
     pozy.innerHTML = '';
     var pp = (s.poz && s.poz.length) ? s.poz : [null,null,null];
     pp.forEach(function(p){ addPoz(p); });
-    var wb = document.querySelectorAll('#view-oferta .wbox .in');
-    (s.warunki||[]).forEach(function(v,i){ if(wb[i]) wb[i].value = v; });
-    var uw = document.querySelectorAll('#view-oferta .uwagi .in');
-    (s.uwagi||[]).forEach(function(v,i){ if(uw[i]) uw[i].value = v; });
     return true;
   }
 
@@ -621,7 +612,7 @@
     if(currentView === 'oferta'){
       if(!confirm('Wyczyścić ofertę? Tej operacji nie można cofnąć.')) return;
       try{ localStorage.removeItem(KEY2); }catch(e){}
-      document.querySelectorAll('#view-oferta .fld .in, #view-oferta .wbox .in, #view-oferta .uwagi .in').forEach(function(e){ e.value=''; });
+      document.querySelectorAll('#view-oferta .hf').forEach(function(e){ if(e.tagName==='SELECT'){ e.selectedIndex=0; } else { e.value=''; } });
       if(document.getElementById('vat')) document.getElementById('vat').value = '23';
       pozy.innerHTML=''; for(var i=0;i<3;i++) addPoz();
       recompute(); saveOf();
@@ -634,7 +625,7 @@
     var prefix, nr;
     if(currentView === 'oferta'){
       prefix = 'Oferta';
-      var f = document.querySelector('#view-oferta .fld .in'); nr = f ? f.value : '';
+      var hs = document.querySelectorAll('#view-oferta .hf'); var last = hs[hs.length-1]; nr = last ? last.value : '';
     } else {
       prefix = 'Karta_procesu_laser';
       var f2 = document.querySelector('#view-karta .meta .in'); nr = f2 ? f2.value : '';
