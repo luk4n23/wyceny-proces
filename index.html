@@ -624,18 +624,20 @@
     }
   }
 
+  function clean(v){ return (v || '').trim().replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_'); }
   function savePdf(){
-    var prefix, nr;
+    var fname;
     if(currentView === 'oferta'){
-      prefix = 'Oferta';
-      var f = document.getElementById('of-nrzk'); nr = f ? f.value : '';
+      var f = document.getElementById('of-nrzk');
+      var nr = clean(f ? f.value : '');
+      fname = nr || 'Oferta';
     } else {
-      prefix = 'Karta_procesu_laser';
-      var f2 = document.querySelector('#view-karta .meta .in'); nr = f2 ? f2.value : '';
+      var f2 = document.querySelector('#view-karta .meta .in');
+      var nr2 = clean(f2 ? f2.value : '');
+      fname = nr2 ? ('Karta_procesu_laser_' + nr2) : 'Karta_procesu_laser';
     }
-    nr = (nr || '').trim().replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_');
     var old = document.title;
-    document.title = nr ? (prefix + '_' + nr) : prefix;
+    document.title = fname;
     window.print();
     setTimeout(function(){ document.title = old; }, 1500);
   }
