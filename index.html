@@ -284,6 +284,10 @@
 
     <div class="body">
 
+      <div class="meta" style="grid-template-columns:2fr 1fr; margin-bottom:8px;">
+        <div class="fld"><div class="l">Klient</div><input class="hf"></div>
+        <div class="fld"><div class="l">Nr zlecenia klienta</div><input class="hf" id="of-nrzk"></div>
+      </div>
       <div class="meta" style="grid-template-columns:repeat(3,1fr);">
         <div class="fld"><div class="l">Data wystawienia</div><input type="date" class="hf"></div>
         <div class="fld"><div class="l">Forma płatności</div>
@@ -291,13 +295,12 @@
             <option>Przelew 7 dni</option><option>Przelew 14 dni</option><option>Przelew 30 dni</option>
             <option>Przedpłata 100%</option><option>Gotówka</option><option>Za pobraniem</option>
           </select></div>
-        <div class="fld"><div class="l">Ofertę przygotował</div><input class="hf" list="dl-prep"></div>
+        <div class="fld"><div class="l">Ofertę przygotował</div><input class="hf" list="dl-prep" value="Łukasz Orlikowski"></div>
         <div class="fld"><div class="l">Oferta ważna do</div>
           <select class="hf"><option>1 tydzień</option><option>2 tygodnie</option><option>30 dni</option><option>do odwołania</option></select></div>
         <div class="fld"><div class="l">Termin wykonania</div><input class="hf" list="dl-term" value="do ustalenia"></div>
-        <div class="fld"><div class="l">Nr zlecenia klienta</div><input class="hf"></div>
       </div>
-      <datalist id="dl-prep"><option>Aleksander Wyrwicz</option></datalist>
+      <datalist id="dl-prep"><option>Łukasz Orlikowski</option></datalist>
       <datalist id="dl-term"><option>do ustalenia</option><option>1 tydzień</option><option>2 tygodnie</option><option>3 tygodnie</option><option>4 tygodnie</option><option>wg uzgodnień</option></datalist>
       <datalist id="dl-mat"><option>ST</option><option>OC</option><option>AL</option><option>IN</option></datalist>
 
@@ -526,7 +529,7 @@
   })();
 
   /* ============ OFERTA ============ */
-  var KEY2 = 'mks_oferta_laser';
+  var KEY2 = 'mks_oferta_laser_v2';
   var pozy = document.getElementById('pozy');
 
   function toNum(s){
@@ -625,7 +628,7 @@
     var prefix, nr;
     if(currentView === 'oferta'){
       prefix = 'Oferta';
-      var hs = document.querySelectorAll('#view-oferta .hf'); var last = hs[hs.length-1]; nr = last ? last.value : '';
+      var f = document.getElementById('of-nrzk'); nr = f ? f.value : '';
     } else {
       prefix = 'Karta_procesu_laser';
       var f2 = document.querySelector('#view-karta .meta .in'); nr = f2 ? f2.value : '';
