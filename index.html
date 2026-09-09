@@ -153,11 +153,7 @@
       <button class="tab" id="tab-oferta" onclick="switchView('oferta')">Oferta</button>
     </div>
     <span id="actKarta" style="display:flex; gap:10px; margin-left:14px;">
-      <button class="btn btn-load" onclick="document.getElementById('dxfpick').click()">Wczytaj pliki DXF</button>
-      <input type="file" id="dxfpick" multiple accept=".dxf,.DXF" style="display:none" onchange="handleFiles(this.files); this.value=''">
       <button class="btn btn-add" onclick="addProg(); save()">+ Dodaj program</button>
-      <button class="btn btn-add" onclick="addRow(); save()">+ Dodaj detal</button>
-      <button class="btn btn-add" onclick="addPallet(); save()">+ Dodaj paletę</button>
     </span>
     <span id="actOferta" style="display:none; gap:10px; margin-left:14px;">
       <button class="btn btn-add" onclick="addPoz(); saveOf()">+ Dodaj pozycję</button>
@@ -168,10 +164,8 @@
       <button class="btn btn-primary" onclick="savePdf()" title="W oknie druku wybierz drukarkę: Zapisz jako PDF">Zapisz PDF</button>
     </span>
   </div>
-  <div class="dropveil" id="veil"><div class="dropmsg">Upuść pliki DXF<small>nazwa, materiał, grubość i ilość uzupełnią się same</small></div></div>
-
   <div class="view" id="view-karta">
-  <div class="hint"><b>Przeciągnij pliki DXF w dowolne miejsce tej strony</b> · nazwa, materiał, grubość i ilość uzupełnią się same wg standardu <span class="mono">nazwa_grubosc_ilosc_material</span>. Możesz też kliknąć „Wczytaj pliki DXF". <b>Zapisz PDF</b> otwiera okno druku z gotową nazwą pliku (wybierz drukarkę „Zapisz jako PDF").</div>
+  <div class="hint"><b>Zapisz PDF</b> otwiera okno druku z gotową nazwą pliku (wybierz drukarkę „Zapisz jako PDF").</div>
 
   <div class="sheet">
   <section class="page">
@@ -212,25 +206,15 @@
             <tbody id="progs"></tbody>
           </table>
         </div>
+        <div class="czas">
+          <div class="f"><div class="l">Czas na przygotowanie</div><input class="in"></div>
+          <div class="f"><div class="l">Czas na cięcie</div><input class="in"></div>
+          <div class="f"><div class="l">Podpis operatora</div><input class="in"></div>
+        </div>
       </div>
 
       <div>
-        <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Detale<span class="lg">wszystkie detale wchodzące w skład zamówienia</span></div></div>
-        <table class="det">
-          <colgroup>
-            <col style="width:4.5%"><col style="width:25%"><col style="width:11%"><col style="width:6.5%"><col style="width:6.5%">
-            <col style="width:43%"><col style="width:3.5%">
-          </colgroup>
-          <thead><tr>
-            <th class="c">Lp</th><th>Nazwa detalu</th><th>Materiał</th><th class="c">Gr [mm]</th><th class="c">Szt.</th>
-            <th>Plik DXF</th><th class="rmcol"></th>
-          </tr></thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-
-      <div>
-        <div class="sec-h"><div class="sec-n">3</div><div class="sec-t">Kontrola jakości · laser<span class="lg">uzupełnia kontroler jakości</span></div></div>
+        <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Kontrola jakości · laser<span class="lg">uzupełnia kontroler jakości</span></div></div>
         <div class="qc">
           <div class="qgrid">
             <label class="qi"><input type="checkbox">Zgodność z plikiem</label>
@@ -329,7 +313,6 @@
 
 <script>
   var KEY = 'mks_karta_laser';
-  var rows = document.getElementById('rows');
   var progs = document.getElementById('progs');
 
   function addProg(data){
@@ -355,52 +338,6 @@
     btn.closest('tr').remove(); save();
   }
 
-  function renum(){
-    var trs = rows.querySelectorAll('tr'), n = 0;
-    for(var i=0;i<trs.length;i++){
-      if(trs[i].classList.contains('pal')) continue;
-      n++; trs[i].querySelector('.lp').textContent = n;
-    }
-  }
-  function addPallet(label){
-    var tr = document.createElement('tr'); tr.className = 'pal';
-    tr.innerHTML =
-      '<td class="palc" colspan="6"><input class="in palin" placeholder="PALETA"></td>'
-      + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń przekładkę">&times;</button></td>';
-    rows.appendChild(tr);
-    tr.querySelector('.palin').value = (label !== undefined && label !== null)
-      ? label : ('PALETA ' + (rows.querySelectorAll('tr.pal').length + 1));
-    renum();
-  }
-  function addRow(data){
-    var tr = document.createElement('tr');
-    tr.innerHTML =
-      '<td class="lp"></td>'
-      + '<td><input class="in"></td>'
-      + '<td><input class="in"></td>'
-      + '<td class="c"><input class="in"></td>'
-      + '<td class="c"><input class="in"></td>'
-      + '<td class="mono"><input class="in"></td>'
-      + '<td class="rmcol"><button class="rm" onclick="delRow(this)" title="Usuń wiersz">&times;</button></td>';
-    rows.appendChild(tr);
-    if(data){
-      var ins = tr.querySelectorAll('input.in');
-      (data.t||[]).forEach(function(v,i){ if(ins[i]) ins[i].value = v; });
-      if(typeof fitPlik === 'function') fitPlik(ins[4]);
-      var cbs = tr.querySelectorAll('input[type=checkbox]');
-      (data.c||[]).forEach(function(v,i){ if(cbs[i]) cbs[i].checked = !!v; });
-    }
-    renum();
-  }
-  function delRow(btn){
-    var tr = btn.closest('tr');
-    if(!tr.classList.contains('pal')){
-      var det = rows.querySelectorAll('tr:not(.pal)').length;
-      if(det <= 1) return;
-    }
-    tr.remove(); renum(); save();
-  }
-
   function collect(){
     return {
       meta: [].map.call(document.querySelectorAll('#view-karta .meta .in'), function(e){ return e.value; }),
@@ -411,13 +348,7 @@
           done: cb ? cb.checked : false
         };
       }),
-      rows: [].map.call(rows.querySelectorAll('tr'), function(tr){
-        if(tr.classList.contains('pal')) return { p: tr.querySelector('.palin').value };
-        return {
-          t: [].map.call(tr.querySelectorAll('input.in'), function(e){ return e.value; }),
-          c: [].map.call(tr.querySelectorAll('input[type=checkbox]'), function(e){ return e.checked; })
-        };
-      }),
+      czas: [].map.call(document.querySelectorAll('#view-karta .czas .in'), function(e){ return e.value; }),
       qc: [].map.call(document.querySelectorAll('#view-karta .qc .qgrid input'), function(e){ return e.checked; }),
       qcsig: [].map.call(document.querySelectorAll('#view-karta .qcsig .in'), function(e){ return e.value; }),
       uwagi: [].map.call(document.querySelectorAll('#view-karta .uwagi .in'), function(e){ return e.value; })
@@ -433,11 +364,8 @@
     progs.innerHTML = '';
     var pp = (s.progs && s.progs.length) ? s.progs : [null,null];
     pp.forEach(function(p){ addProg(p); });
-    rows.innerHTML = '';
-    var rr = (s.rows && s.rows.length) ? s.rows : [null,null,null,null,null,null];
-    rr.forEach(function(r){
-      if(r && r.p !== undefined) addPallet(r.p); else addRow(r);
-    });
+    var cz = document.querySelectorAll('#view-karta .czas .in');
+    (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     var qc = document.querySelectorAll('#view-karta .qc .qgrid input');
     (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
     var qs = document.querySelectorAll('#view-karta .qcsig .in');
@@ -449,78 +377,12 @@
   function clearAll(){
     if(!confirm('Wyczyścić całą kartę? Tej operacji nie można cofnąć.')) return;
     try{ localStorage.removeItem(KEY); }catch(e){}
-    document.querySelectorAll('#view-karta .meta .in, #view-karta .qcsig .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
+    document.querySelectorAll('#view-karta .meta .in, #view-karta .czas .in, #view-karta .qcsig .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
     document.querySelectorAll('#view-karta .qc .qgrid input').forEach(function(c){ c.checked=false; });
     progs.innerHTML=''; for(var p=0;p<2;p++) addProg();
-    rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
     save();
   }
 
-  /* --- wczytywanie plikow DXF --- */
-  function fitPlik(el){
-    if(!el) return;
-    el.classList.toggle('tiny', (el.value || '').length > 56);
-  }
-  document.addEventListener('input', function(e){
-    if(e.target && e.target.closest && e.target.closest('.det td.mono')) fitPlik(e.target);
-  });
-  function parseDxf(filename){
-    var base = filename.replace(/\.[^.]+$/, '');
-    var out = { nazwa:'', mat:'', gr:'', szt:'', plik: filename };
-    var rest = [];
-    base.split('_').forEach(function(p){
-      var m;
-      if(!out.gr && (m = p.match(/^(\d+(?:[.,]\d+)?)\s*mm$/i))){ out.gr = m[1].replace('.', ','); return; }
-      if(!out.szt && (m = p.match(/^x\s*(\d+)$/i))){ out.szt = m[1]; return; }
-      if(!out.szt && (m = p.match(/^(\d+)\s*(?:szt|x)$/i))){ out.szt = m[1]; return; }
-      rest.push(p);
-    });
-    if(rest.length > 1){ out.mat = rest.pop(); }
-    out.nazwa = rest.join('_');
-    return out;
-  }
-  function isRowEmpty(tr){
-    if(tr.classList.contains('pal')) return false;
-    var ins = tr.querySelectorAll('input.in');
-    for(var i=0;i<ins.length;i++){ if(ins[i].value.trim()) return false; }
-    return true;
-  }
-  function fillRow(tr, d){
-    var ins = tr.querySelectorAll('input.in');
-    ins[0].value = d.nazwa; ins[1].value = d.mat; ins[2].value = d.gr; ins[3].value = d.szt; ins[4].value = d.plik;
-    fitPlik(ins[4]);
-  }
-  function handleFiles(files){
-    var list = [].slice.call(files).filter(function(f){ return /\.dxf$/i.test(f.name); });
-    if(!list.length){ alert('Nie znaleziono plików DXF. Przeciągnij pliki z rozszerzeniem .dxf'); return; }
-    list.sort(function(a,b){ return a.name.localeCompare(b.name, 'pl'); });
-    list.forEach(function(f){
-      var d = parseDxf(f.name);
-      var trs = rows.querySelectorAll('tr'), target = null;
-      for(var i=0;i<trs.length;i++){ if(isRowEmpty(trs[i])){ target = trs[i]; break; } }
-      if(!target){ addRow(); target = rows.lastElementChild; }
-      fillRow(target, d);
-    });
-    renum(); save();
-  }
-
-  /* --- drag and drop na calej stronie --- */
-  (function(){
-    var veil = document.getElementById('veil'), depth = 0;
-    function hasFiles(e){ return e.dataTransfer && [].indexOf.call(e.dataTransfer.types || [], 'Files') !== -1; }
-    document.addEventListener('dragenter', function(e){
-      if(!hasFiles(e)) return; e.preventDefault(); depth++; veil.classList.add('on');
-    });
-    document.addEventListener('dragover', function(e){ if(hasFiles(e)){ e.preventDefault(); } });
-    document.addEventListener('dragleave', function(e){
-      if(!hasFiles(e)) return; depth--; if(depth<=0){ depth=0; veil.classList.remove('on'); }
-    });
-    document.addEventListener('drop', function(e){
-      if(!hasFiles(e)) return;
-      e.preventDefault(); depth=0; veil.classList.remove('on');
-      handleFiles(e.dataTransfer.files);
-    });
-  })();
 
   /* ============ OFERTA ============ */
   var KEY2 = 'mks_oferta_laser_v2';
@@ -637,7 +499,7 @@
   }
 
   /* ============ INIT ============ */
-  if(!restore()){ for(var p=0;p<2;p++) addProg(); for(var i=0;i<6;i++) addRow(); }
+  if(!restore()){ for(var p=0;p<2;p++) addProg(); }
   if(!restoreOf()){ for(var q=0;q<3;q++) addPoz(); }
   recompute();
   var sv; try{ sv = localStorage.getItem('mks_view'); }catch(e){}
