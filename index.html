@@ -196,18 +196,18 @@
         <div class="meta">
           <div class="fld"><div class="l">Nr zlecenia</div><input class="in"></div>
           <div class="fld"><div class="l">Klient</div><input class="in"></div>
-          <div class="fld"><div class="l">Data przyjęcia</div><input class="in"></div>
-          <div class="fld"><div class="l">Termin</div><input class="in"></div>
+          <div class="fld"><div class="l">Data przyjęcia</div><input type="date" class="in"></div>
+          <div class="fld"><div class="l">Termin</div><input type="date" class="in"></div>
         </div>
 
         <div class="prgwrap">
           <div class="prgh">Programy na maszynę<span class="lg">otwórz na sterowniku po kolei i odhacz wykonane</span></div>
           <table class="det prg">
             <colgroup>
-              <col style="width:53%"><col style="width:27%"><col style="width:8%"><col style="width:8.5%"><col style="width:3.5%">
+              <col style="width:72%"><col style="width:11%"><col style="width:12%"><col style="width:5%">
             </colgroup>
             <thead><tr>
-              <th>Nazwa programu na sterowniku</th><th>Materiał / grubość</th><th class="c">Ark.</th><th class="c">Wykonano</th><th class="rmcol"></th>
+              <th>Nazwa programu na sterowniku</th><th class="c">Ark.</th><th class="c">Wykonano</th><th class="rmcol"></th>
             </tr></thead>
             <tbody id="progs"></tbody>
           </table>
@@ -227,11 +227,6 @@
           </tr></thead>
           <tbody id="rows"></tbody>
         </table>
-        <div class="czas">
-          <div class="f"><div class="l">Czas na przygotowanie</div><input class="in"></div>
-          <div class="f"><div class="l">Czas na cięcie</div><input class="in"></div>
-          <div class="f"><div class="l">Podpis operatora</div><input class="in"></div>
-        </div>
       </div>
 
       <div>
@@ -341,14 +336,16 @@
     var tr = document.createElement('tr');
     tr.innerHTML =
       '<td class="pn"><input class="in"></td>'
-      + '<td><input class="in"></td>'
       + '<td class="c"><input class="in"></td>'
       + '<td class="c"><input type="checkbox"></td>'
       + '<td class="rmcol"><button class="rm" onclick="delProg(this)" title="Usuń program">&times;</button></td>';
     progs.appendChild(tr);
     if(data){
       var ins = tr.querySelectorAll('input.in');
-      (data.t||[]).forEach(function(v,i){ if(ins[i]) ins[i].value = v; });
+      // Migracja starego formatu (nazwa, materiał/grubość, ark) -> (nazwa, ark).
+      var t = data.t || [];
+      if(t.length >= 3){ t = [t[0], t[2]]; }
+      t.forEach(function(v,i){ if(ins[i]) ins[i].value = v; });
       var cb = tr.querySelector('input[type=checkbox]');
       if(cb) cb.checked = !!data.done;
     }
@@ -421,7 +418,6 @@
           c: [].map.call(tr.querySelectorAll('input[type=checkbox]'), function(e){ return e.checked; })
         };
       }),
-      czas: [].map.call(document.querySelectorAll('#view-karta .czas .in'), function(e){ return e.value; }),
       qc: [].map.call(document.querySelectorAll('#view-karta .qc .qgrid input'), function(e){ return e.checked; }),
       qcsig: [].map.call(document.querySelectorAll('#view-karta .qcsig .in'), function(e){ return e.value; }),
       uwagi: [].map.call(document.querySelectorAll('#view-karta .uwagi .in'), function(e){ return e.value; })
@@ -442,8 +438,6 @@
     rr.forEach(function(r){
       if(r && r.p !== undefined) addPallet(r.p); else addRow(r);
     });
-    var cz = document.querySelectorAll('#view-karta .czas .in');
-    (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     var qc = document.querySelectorAll('#view-karta .qc .qgrid input');
     (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
     var qs = document.querySelectorAll('#view-karta .qcsig .in');
@@ -455,7 +449,7 @@
   function clearAll(){
     if(!confirm('Wyczyścić całą kartę? Tej operacji nie można cofnąć.')) return;
     try{ localStorage.removeItem(KEY); }catch(e){}
-    document.querySelectorAll('#view-karta .meta .in, #view-karta .czas .in, #view-karta .qcsig .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
+    document.querySelectorAll('#view-karta .meta .in, #view-karta .qcsig .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
     document.querySelectorAll('#view-karta .qc .qgrid input').forEach(function(c){ c.checked=false; });
     progs.innerHTML=''; for(var p=0;p<2;p++) addProg();
     rows.innerHTML=''; for(var i=0;i<6;i++) addRow();
