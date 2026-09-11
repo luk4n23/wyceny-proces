@@ -57,6 +57,9 @@
   .in{ width:100%; border:none; background:transparent; font:inherit; color:var(--ink); padding:2px 0; outline:none; }
   .fld .in{ border-bottom:1px dotted #c7ced4; height:19px; margin-top:2px; }
   .fld .in:focus{ border-bottom-color:var(--red); }
+  .zap{ display:flex; align-items:center; gap:3px; }
+  .zap .pfx{ font-weight:800; color:var(--red); font-size:10px; margin-top:2px; white-space:nowrap; }
+  .zap .in{ flex:1; }
 
   table{ width:100%; border-collapse:collapse; table-layout:fixed; }
   .det th{ background:#2a2f35; color:#fff; font-size:7.6px; letter-spacing:.2px; text-transform:uppercase; font-weight:800; padding:6px 4px; text-align:left; }
@@ -188,7 +191,7 @@
       <div>
         <div class="sec-h"><div class="sec-n">1</div><div class="sec-t">Zlecenie</div></div>
         <div class="meta">
-          <div class="fld"><div class="l">Nr zlecenia</div><input class="in"></div>
+          <div class="fld"><div class="l">Nr zlecenia</div><div class="zap"><span class="pfx">ZAP-</span><input type="date" class="in"></div></div>
           <div class="fld"><div class="l">Klient</div><input class="in"></div>
           <div class="fld"><div class="l">Data przyjęcia</div><input type="date" class="in"></div>
           <div class="fld"><div class="l">Termin</div><input type="date" class="in"></div>
