@@ -219,21 +219,19 @@
       </div>
 
       <div>
-        <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Kontrola jakości · laser<span class="lg">uzupełnia kontroler jakości</span></div></div>
-        <div class="qc">
-          <div class="qgrid">
-            <label class="qi"><input type="checkbox">Zgodność z plikiem</label>
-            <label class="qi"><input type="checkbox">Wymiary w tolerancji</label>
-            <label class="qi"><input type="checkbox">Ilość sztuk zgodna</label>
-            <label class="qi"><input type="checkbox">Materiał i grubość zgodne</label>
-            <label class="qi"><input type="checkbox">Cięcie bez zadziorów i nagaru</label>
-            <label class="qi"><input type="checkbox">Oznakowanie / etykieta</label>
-          </div>
-          <div class="qcsig">
-            <div class="f"><div class="l">Data kontroli</div><input class="in"></div>
-            <div class="f"><div class="l">Podpis kontrolera jakości</div><input class="in"></div>
-          </div>
+        <div class="sec-h"><div class="sec-n">2</div><div class="sec-t">Dodatkowe procesy obróbcze<span class="lg">gięcie, gwintowanie, spawanie, malowanie itp.</span></div></div>
+        <div class="prgwrap">
+          <table class="det prg">
+            <colgroup>
+              <col style="width:34%"><col style="width:22%"><col style="width:22%"><col style="width:17%"><col style="width:5%">
+            </colgroup>
+            <thead><tr>
+              <th>Nazwa procesu</th><th class="c">Czas na przygotowanie</th><th class="c">Czas na wykonanie</th><th class="c">Podpis</th><th class="rmcol"></th>
+            </tr></thead>
+            <tbody id="procs"></tbody>
+          </table>
         </div>
+        <button class="btn btn-add" onclick="addProc(); save()">+ Dodaj proces</button>
       </div>
 
       <div class="uwagi">
@@ -319,6 +317,26 @@
 <script>
   var KEY = 'mks_karta_laser';
   var progs = document.getElementById('progs');
+  var procs = document.getElementById('procs');
+
+  function addProc(data){
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td><input class="in"></td>'
+      + '<td class="c"><input class="in"></td>'
+      + '<td class="c"><input class="in"></td>'
+      + '<td class="c"><input class="in"></td>'
+      + '<td class="rmcol"><button class="rm" onclick="delProc(this)" title="Usuń proces">&times;</button></td>';
+    procs.appendChild(tr);
+    if(data){
+      var ins = tr.querySelectorAll('input.in');
+      (data.t || []).forEach(function(v,i){ if(ins[i]) ins[i].value = v; });
+    }
+  }
+  function delProc(btn){
+    if(procs.querySelectorAll('tr').length <= 1) return;
+    btn.closest('tr').remove(); save();
+  }
 
   function addProg(data){
     var tr = document.createElement('tr');
@@ -354,8 +372,9 @@
         };
       }),
       czas: [].map.call(document.querySelectorAll('#view-karta .czas .in'), function(e){ return e.value; }),
-      qc: [].map.call(document.querySelectorAll('#view-karta .qc .qgrid input'), function(e){ return e.checked; }),
-      qcsig: [].map.call(document.querySelectorAll('#view-karta .qcsig .in'), function(e){ return e.value; }),
+      procs: [].map.call(procs.querySelectorAll('tr'), function(tr){
+        return { t: [].map.call(tr.querySelectorAll('input.in'), function(e){ return e.value; }) };
+      }),
       uwagi: [].map.call(document.querySelectorAll('#view-karta .uwagi .in'), function(e){ return e.value; })
     };
   }
@@ -371,10 +390,9 @@
     pp.forEach(function(p){ addProg(p); });
     var cz = document.querySelectorAll('#view-karta .czas .in');
     (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
-    var qc = document.querySelectorAll('#view-karta .qc .qgrid input');
-    (s.qc||[]).forEach(function(v,i){ if(qc[i]) qc[i].checked = !!v; });
-    var qs = document.querySelectorAll('#view-karta .qcsig .in');
-    (s.qcsig||[]).forEach(function(v,i){ if(qs[i]) qs[i].value = v; });
+    procs.innerHTML = '';
+    var pc = (s.procs && s.procs.length) ? s.procs : [null,null];
+    pc.forEach(function(p){ addProc(p); });
     var uw = document.querySelectorAll('#view-karta .uwagi .in');
     (s.uwagi||[]).forEach(function(v,i){ if(uw[i]) uw[i].value = v; });
     return true;
@@ -382,9 +400,9 @@
   function clearAll(){
     if(!confirm('Wyczyścić całą kartę? Tej operacji nie można cofnąć.')) return;
     try{ localStorage.removeItem(KEY); }catch(e){}
-    document.querySelectorAll('#view-karta .meta .in, #view-karta .czas .in, #view-karta .qcsig .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
-    document.querySelectorAll('#view-karta .qc .qgrid input').forEach(function(c){ c.checked=false; });
+    document.querySelectorAll('#view-karta .meta .in, #view-karta .czas .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
     progs.innerHTML=''; for(var p=0;p<2;p++) addProg();
+    procs.innerHTML=''; for(var pc=0;pc<2;pc++) addProc();
     save();
   }
 
@@ -504,7 +522,7 @@
   }
 
   /* ============ INIT ============ */
-  if(!restore()){ for(var p=0;p<2;p++) addProg(); }
+  if(!restore()){ for(var p=0;p<2;p++) addProg(); for(var pc=0;pc<2;pc++) addProc(); }
   if(!restoreOf()){ for(var q=0;q<3;q++) addPoz(); }
   recompute();
   var sv; try{ sv = localStorage.getItem('mks_view'); }catch(e){}
