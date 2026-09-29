@@ -391,7 +391,8 @@
     var cz = document.querySelectorAll('#view-karta .czas .in');
     (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     procs.innerHTML = '';
-    var pc = (s.procs && s.procs.length) ? s.procs : [null,null,null,null,null];
+    var pc = (s.procs && s.procs.length) ? s.procs.slice() : [];
+    while(pc.length < 5) pc.push(null);
     pc.forEach(function(p){ addProc(p); });
     var uw = document.querySelectorAll('#view-karta .uwagi .in');
     (s.uwagi||[]).forEach(function(v,i){ if(uw[i]) uw[i].value = v; });
