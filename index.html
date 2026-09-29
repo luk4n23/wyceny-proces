@@ -391,7 +391,7 @@
     var cz = document.querySelectorAll('#view-karta .czas .in');
     (s.czas||[]).forEach(function(v,i){ if(cz[i]) cz[i].value = v; });
     procs.innerHTML = '';
-    var pc = (s.procs && s.procs.length) ? s.procs : [null,null];
+    var pc = (s.procs && s.procs.length) ? s.procs : [null,null,null,null,null];
     pc.forEach(function(p){ addProc(p); });
     var uw = document.querySelectorAll('#view-karta .uwagi .in');
     (s.uwagi||[]).forEach(function(v,i){ if(uw[i]) uw[i].value = v; });
@@ -402,7 +402,7 @@
     try{ localStorage.removeItem(KEY); }catch(e){}
     document.querySelectorAll('#view-karta .meta .in, #view-karta .czas .in, #view-karta .uwagi .in').forEach(function(e){ e.value=''; });
     progs.innerHTML=''; for(var p=0;p<2;p++) addProg();
-    procs.innerHTML=''; for(var pc=0;pc<2;pc++) addProc();
+    procs.innerHTML=''; for(var pc=0;pc<5;pc++) addProc();
     save();
   }
 
@@ -522,7 +522,7 @@
   }
 
   /* ============ INIT ============ */
-  if(!restore()){ for(var p=0;p<2;p++) addProg(); for(var pc=0;pc<2;pc++) addProc(); }
+  if(!restore()){ for(var p=0;p<2;p++) addProg(); for(var pc=0;pc<5;pc++) addProc(); }
   if(!restoreOf()){ for(var q=0;q<3;q++) addPoz(); }
   recompute();
   var sv; try{ sv = localStorage.getItem('mks_view'); }catch(e){}
